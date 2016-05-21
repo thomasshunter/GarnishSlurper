@@ -20,11 +20,13 @@ import org.springframework.context.annotation.PropertySource;
 public class NewOrleansProperties implements Serializable
 {
     private static Logger LOG                                                   = Logger.getLogger( NewOrleansProperties.class );   
-    
-    public static final String ORLEANSDC_REMOTE_ACCESS_FIRST_CITY               = "http://remoteaccess.orleanscdc.com/fcc-ra/login.asp";
+                                                                                 //http://remoteaccess.orleanscdc.com/fcc-ra//login.asp
+    public static final String ORLEANSDC_REMOTE_ACCESS_FIRST_CITY               = "http://remoteaccess.orleanscdc.com/fcc-ra//login.asp";
     public static final String ORLEANSDC_NEW_SEARCH                             = "http://remoteaccess.orleanscdc.com/fcc-ra//search_page.asp";
     public static final String ATTORNEY_SETTINGS_PATH_WIN                       = "C:/";
     public static final String ATTORNEY_SETTINGS_PATH_MAC                       = "/Users/tomhunter/";
+    
+    public static final String SEARCH_TYPE_ALL_0                                = "0";
     
     private Properties properties;
     
@@ -75,11 +77,23 @@ public class NewOrleansProperties implements Serializable
     }
     
     
+    public String getPropertyByKey( String key )
+    {
+        String value = this.properties.getProperty( key );
+        
+        return value;
+    }
+    
     public static void main( String[] args )
     {
         NewOrleansProperties props = new NewOrleansProperties();
         
         
+    }
+
+    public Properties getProperties()
+    {
+        return properties;
     }
     
     /*
