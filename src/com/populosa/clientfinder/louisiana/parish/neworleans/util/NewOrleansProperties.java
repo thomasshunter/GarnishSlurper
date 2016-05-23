@@ -27,6 +27,9 @@ public class NewOrleansProperties implements Serializable
     public static final String ATTORNEY_SETTINGS_PATH_MAC                       = "/Users/tomhunter/";
     
     public static final String SEARCH_TYPE_ALL_0                                = "0";
+    public static final String DEFENDANT                                        = "Defendant";
+    public static final String PLAINTIFF                                        = "Plaintiff";
+    public static final String DETAILS_LINK_CAPTION                             = "Details";
     
     private Properties properties;
     
