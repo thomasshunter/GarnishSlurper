@@ -21,17 +21,19 @@ public class GarnishSlurper
     private static Logger LOG       = Logger.getLogger( GarnishSlurper.class );
     
     private NewOrleansProperties newOrleansProperties;
+    private List<String> casesNumbersWithKeywordMatches;
     
     public GarnishSlurper()
     {
-        this.newOrleansProperties   = new NewOrleansProperties();
+        this.newOrleansProperties           = new NewOrleansProperties();
+        this.casesNumbersWithKeywordMatches = new ArrayList<String>();
         
         // Create a new instance of the Firefox driver
         // Notice that the remainder of the code relies on the interface, 
         // not the implementation.
         System.setProperty( "webdriver.chrome.driver", "/Users/tomhunter/DEV/workspaceGarnishSlurper/chromedriver" );
         
-        WebDriver driver            = new ChromeDriver();
+        WebDriver driver                    = new ChromeDriver();
 
         goToOrleansDcRemoteAccessFirstCityAndLogin( driver );
         
@@ -146,8 +148,9 @@ public class GarnishSlurper
             }
         }
         
+        System.out.println( this.casesNumbersWithKeywordMatches.toString() );
         
-        System.out.println( "wait" );
+        
     }
     
     
@@ -157,18 +160,12 @@ public class GarnishSlurper
         
         while( clickedLinks.size() < 10 ) // Typically 10 links per page.
         {
-            int highestLinkIndex = 999;
+            int highestLinkIndex = 30; // First seven links we don't want. This is just to get into the loopo.
             
             for( int currentLinkIndex = 0; currentLinkIndex < highestLinkIndex; currentLinkIndex++ )
             {
                 List<WebElement> links  = driver.findElements(By.tagName("a"));
-                highestLinkIndex        = links.size();
-                
-           //     if( currentLinkIndex >= highestLinkIndex )
-           //     {
-           //         continue;
-           //     }
-
+                highestLinkIndex        = links.size();                
                 WebElement anElement    = links.get( currentLinkIndex );
                 String anElementsText   = anElement.getText();
                 boolean alreadyClicked  = clickedLinks.contains( anElementsText );
@@ -190,21 +187,24 @@ public class GarnishSlurper
                     }
                 
                     String pageSource                   = driver.switchTo().frame( "modify_case_events_detail" ).getPageSource();
-                    //String pageSource                   = driver.getPageSource();
-                    pageSource                          = pageSource.toLowerCase();
-                
+                    pageSource                          = pageSource.toLowerCase();                
                     int indexOfKeywordFragmentOnPage    = pageSource.indexOf( keywordFragmentToSearch.toLowerCase() );
                 
                     if( indexOfKeywordFragmentOnPage > -1 )
-                    {                    
-                        pullCaseLitigants( driver );
+                    {  
+                        this.casesNumbersWithKeywordMatches.add( anElementsText );
+                        
+                        //pullCaseLitigants( driver );
                     }
+                    
+                    driver.navigate().back();
                 }
             }
         }        
     }
     
     
+    @Deprecated
     private void pullCaseLitigants( WebDriver driver )
     {
         driver.switchTo().defaultContent().findElement( By.linkText( "Case Litigants" ) ).click();
@@ -238,7 +238,7 @@ public class GarnishSlurper
                     }
                     else if( indexOfDefendantFlag > -1 )
                     {
-                        String pageSource = driver.getPageSource();
+                        collectOneDefendant( driver );
                         
                         System.out.println( "wait" );
                     }
@@ -248,6 +248,14 @@ public class GarnishSlurper
         
         WebElement backButton               = driver.findElement( By.name( "back" ) );
         backButton.click();
+        
+        String pageTitleAfter               = driver.getTitle();
+        System.out.println( "pageTitleAfter=" + pageTitleAfter );
+        
+        driver.navigate().back();
+        String pageTitleAfter2ndBack        = driver.getTitle();
+        System.out.println( "pageTitleAfter2ndBack=" + pageTitleAfter2ndBack );
+        
 
         //driver.navigate().back();
     }
