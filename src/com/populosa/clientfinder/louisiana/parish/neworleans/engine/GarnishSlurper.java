@@ -157,8 +157,9 @@ public class GarnishSlurper
     private void searchOnePageOfResults( WebDriver driver, String keywordFragmentToSearch, String iBY, String iEY )
     {
         Set<String> clickedLinks                = new HashSet<String>();
+        boolean stillMorePages                  = true;
         
-        while( clickedLinks.size() < 10 ) // Typically 10 links per page.
+        while( stillMorePages && clickedLinks.size() < 10 ) // Typically 10 links per page.
         {
             int highestLinkIndex = 30; // First seven links we don't want. This is just to get into the loopo.
             
@@ -167,7 +168,7 @@ public class GarnishSlurper
                 List<WebElement> links  = driver.findElements(By.tagName("a"));
                 highestLinkIndex        = links.size();                
                 WebElement anElement    = links.get( currentLinkIndex );
-                String anElementsText   = anElement.getText();
+                String anElementsText   = anElement.getText();                
                 boolean alreadyClicked  = clickedLinks.contains( anElementsText );
             
                 if( !alreadyClicked && anElementsText.startsWith( iBY ) || anElementsText.startsWith( iEY ) ) // Cannot support searches whose span touches three years.
@@ -199,6 +200,22 @@ public class GarnishSlurper
                     
                     driver.navigate().back();
                 }
+            }
+            
+            WebElement nextPage = null;
+            
+            try
+            {
+                nextPage = driver.findElement( By.name( "next" ) );
+            }
+            catch( Exception e )
+            {
+                GarnishSlurper.LOG.info( "No Next available, should be last page. e=" + e );
+            }
+            
+            if( nextPage == null )
+            {
+                stillMorePages = false;
             }
         }        
     }
