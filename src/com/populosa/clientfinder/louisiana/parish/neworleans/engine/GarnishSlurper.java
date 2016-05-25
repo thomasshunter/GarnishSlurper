@@ -136,7 +136,16 @@ public class GarnishSlurper
         {
             searchOnePageOfResults( driver, keywordFragmentToSearch, iBY, iEY );
                         
-            WebElement nextPage = driver.findElement( By.name( "next" ) );
+            WebElement nextPage = null;
+            
+            try
+            {
+                nextPage = driver.findElement( By.name( "next" ) );
+            }
+            catch( Exception e )
+            {
+                GarnishSlurper.LOG.info( "GarnishSlurper.executeOrleansDCSearch() threw an Exception on the last page. No biggie., e=" + e );
+            }
             
             if( nextPage == null )
             {
