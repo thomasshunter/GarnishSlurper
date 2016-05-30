@@ -30,6 +30,7 @@ public class NewOrleansProperties implements Serializable
     public static final String DEFENDANT                                        = "Defendant";
     public static final String PLAINTIFF                                        = "Plaintiff";
     public static final String DETAILS_LINK_CAPTION                             = "Details";
+    public static final String SEARCH_HYPHEN                                    = "-";
     
     private Properties properties;
     

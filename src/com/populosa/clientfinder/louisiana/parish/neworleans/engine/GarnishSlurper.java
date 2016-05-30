@@ -1,7 +1,10 @@
 package com.populosa.clientfinder.louisiana.parish.neworleans.engine;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -10,21 +13,28 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.populosa.clientfinder.louisiana.parish.neworleans.bean.Defendant;
 import com.populosa.clientfinder.louisiana.parish.neworleans.util.NewOrleansProperties;
 
 public class GarnishSlurper
-{
-    private static Logger LOG       = Logger.getLogger( GarnishSlurper.class );
+{    
+    private static Logger LOG           = Logger.getLogger( GarnishSlurper.class );
+    
     
     private NewOrleansProperties newOrleansProperties;
     private List<String> casesNumbersWithKeywordMatches;
+    private List<Defendant> defendants  = new ArrayList<Defendant>();
     
     public GarnishSlurper()
     {
+        GarnishSlurper.setupLog4J();
+        
+        //System.setProperty("log4j.configuration","/Users/tomhunter/DEV/workspaceGarnishSlurper/GarnishSlurper/src/log4j.properties");
+
         this.newOrleansProperties           = new NewOrleansProperties();
         this.casesNumbersWithKeywordMatches = new ArrayList<String>();
         
@@ -39,35 +49,39 @@ public class GarnishSlurper
         
         executeOrleansDCSearch( driver );
         
-        
-        
-        //WebElement element = driver.findElement(By.name("q"));
+        echoSearchFindings();
 
-        // Enter something to search for
-        //element.sendKeys("Cheese!");
-
-        // Now submit the form. WebDriver will find the form for us from the element
-        //element.submit();
-
-        // Check the title of the page
-        System.out.println("Page title is: " + driver.getTitle());
-        
-        // Google's search is rendered dynamically with JavaScript.
-        // Wait for the page to load, timeout after 10 seconds
-        (new WebDriverWait(driver, 10)).until(new ExpectedCondition<Boolean>() 
-        {
-            public Boolean apply(WebDriver d) 
-            {
-                return d.getTitle().toLowerCase().startsWith("cheese!");
-            }
-        });
-
-        // Should see: "cheese! - Google Search"
-        System.out.println("Page title is: " + driver.getTitle());
+        pullCaseLitigants( driver );
+          
+        writeDefendantsToExcel();
         
         //Close the browser
         driver.quit();        
     }
+    
+    
+    private void writeDefendantsToExcel()
+    {
+        
+    }
+    
+    
+    
+    private static void setupLog4J()
+    {
+        try 
+        {
+            File file       = new File("//Users/tomhunter/DEV/workspaceGarnishSlurper/GarnishSlurper/src/log4j.properties");
+            String filePath = file.toURI().toURL().toString();
+            
+            //System.setProperty("log4j.configuration", filePath );
+        } 
+        catch (MalformedURLException e) 
+        {
+            e.printStackTrace();
+        }
+    }
+
     
     private void goToOrleansDcRemoteAccessFirstCityAndLogin( WebDriver driver )
     {
@@ -155,13 +169,8 @@ public class GarnishSlurper
             {
                 nextPage.click();
             }
-        }
-        
-        System.out.println( this.casesNumbersWithKeywordMatches.toString() );
-        
-        
+        }        
     }
-    
     
     private void searchOnePageOfResults( WebDriver driver, String keywordFragmentToSearch, String iBY, String iEY )
     {
@@ -229,70 +238,146 @@ public class GarnishSlurper
         }        
     }
     
-    
-    @Deprecated
     private void pullCaseLitigants( WebDriver driver )
     {
-        driver.switchTo().defaultContent().findElement( By.linkText( "Case Litigants" ) ).click();
-        List<WebElement> links              = driver.findElements(By.tagName( "a" ) );
-        Set<Integer> alreadyClickedDetails  = new HashSet<Integer>();
+        Iterator<String> caseNumbersWithKeywordMatchesIt   = this.casesNumbersWithKeywordMatches.iterator();
         
-        for( int i = 0; i < links.size(); i++ )
+        while( caseNumbersWithKeywordMatchesIt.hasNext() )
         {
-            WebElement aLink    = links.get( i );
-            String linkText     = aLink.getText();
-            int indexOfDetails  = linkText.indexOf( NewOrleansProperties.DETAILS_LINK_CAPTION );
-        
-            if( indexOfDetails > -1 ) // The link has the word 'Details' in it.
+            String aCaseNumberToSearch      = caseNumbersWithKeywordMatchesIt.next();
+            if( aCaseNumberToSearch != null )
             {
-                boolean isNewlyAdded = alreadyClickedDetails.add( new Integer( i ) ); // The 'Details' link has not yet been clicked
-                
-                if( isNewlyAdded )
+                int indexOfYearCaseHyphen   = aCaseNumberToSearch.indexOf( NewOrleansProperties.SEARCH_HYPHEN );
+                if( indexOfYearCaseHyphen > -1 )
                 {
-                    aLink.click();
-                    String possibleLitigantPageSource   = driver.getPageSource();
-                    int indexOfPlaintiffFlag            = possibleLitigantPageSource.indexOf( NewOrleansProperties.PLAINTIFF );
-                    int indexOfDefendantFlag            = possibleLitigantPageSource.indexOf( NewOrleansProperties.DEFENDANT );
-                
-                    if( indexOfPlaintiffFlag > -1 )
-                    {
-                        driver.findElement( By.name( "back") ).click(); // Not a Defendant
-                        links               = driver.findElements(By.tagName( "a" ) );
-                        String pageTitle    = driver.getTitle();
+                    String[] yearCase = aCaseNumberToSearch.split( NewOrleansProperties.SEARCH_HYPHEN  );
                     
-                        System.out.println( "After 'Back': " + pageTitle );
-                    }
-                    else if( indexOfDefendantFlag > -1 )
+                    if( yearCase.length == 2 )
                     {
-                        collectOneDefendant( driver );
+                        driver.navigate().to( NewOrleansProperties.ORLEANSDC_NEW_SEARCH );
                         
-                        System.out.println( "wait" );
-                    }
-                }
+                        WebElement yearNumber               = driver.findElement( By.name( "sNum1" ) );
+                        yearNumber.sendKeys( yearCase[ 0 ].trim() );
+
+                        WebElement caseNumber               = driver.findElement( By.name( "sNum2" ) );
+                        caseNumber.sendKeys( yearCase[ 1 ].trim() );
+                        
+                        WebElement searchButton             = driver.findElement( By.name( "search" ) );
+                        searchButton.click();
+                        
+                        driver.switchTo().defaultContent().findElement( By.linkText( "Case Litigants" ) ).click();
+                        List<WebElement> links              = driver.findElements(By.tagName( "a" ) );
+                        Set<Integer> alreadyClickedDetails  = new HashSet<Integer>();
+                        boolean foundDefendant              = false;
+                        
+                        for( int i = 0; i < links.size(); i++ )
+                        {
+                           if( foundDefendant )
+                           {
+                               break;
+                           }
+                                                           
+                           links               = driver.findElements(By.tagName( "a" ) );
+                           WebElement aLink    = links.get( i );
+                           String linkText     = aLink.getText();
+                           int indexOfDetails  = linkText.indexOf( NewOrleansProperties.DETAILS_LINK_CAPTION );
+                        
+                           if( indexOfDetails > -1 ) // The link has the word 'Details' in it.
+                           {
+                               boolean isNewlyAdded = alreadyClickedDetails.add( new Integer( i ) ); // The 'Details' link has not yet been clicked
+                                
+                               if( isNewlyAdded )
+                               {
+                                   aLink.click();
+                                   String possibleLitigantPageSource   = driver.getPageSource();
+                                   int indexOfPlaintiffFlag            = possibleLitigantPageSource.indexOf( NewOrleansProperties.PLAINTIFF );
+                                   int indexOfDefendantFlag            = possibleLitigantPageSource.indexOf( NewOrleansProperties.DEFENDANT );
+                                
+                                   if( indexOfPlaintiffFlag > -1 )
+                                   {
+                                       driver.findElement( By.name( "back") ).click(); // Not a Defendant
+                                       links               = driver.findElements(By.tagName( "a" ) );
+                                       String pageTitle    = driver.getTitle();
+                                   
+                                       System.out.println( "After 'Back': " + pageTitle );
+                                   }
+                                   else if( indexOfDefendantFlag > -1 )
+                                   {
+                                       foundDefendant = collectOneDefendant( driver );
+                                       
+                                       System.out.println( "aCaseNumberToSearch=" + aCaseNumberToSearch + ": foundDefendant=" + foundDefendant );
+                                   }
+                               }
+                           }
+                       }       
+                   }
+               }
             }
-        }
-        
-        WebElement backButton               = driver.findElement( By.name( "back" ) );
-        backButton.click();
-        
-        String pageTitleAfter               = driver.getTitle();
-        System.out.println( "pageTitleAfter=" + pageTitleAfter );
-        
-        driver.navigate().back();
-        String pageTitleAfter2ndBack        = driver.getTitle();
-        System.out.println( "pageTitleAfter2ndBack=" + pageTitleAfter2ndBack );
-        
-
-        //driver.navigate().back();
+        }        
     }
     
-    
-    private void collectOneDefendant( WebDriver driver )
+    private boolean collectOneDefendant( WebDriver driver )
+    {       
+        By nameXpath                        = By.xpath( "//*[@id=\"divResults\"]/p/table/tbody/tr[1]/td[2]/b" );
+        WebElement nameDynamicElement       = (new WebDriverWait(driver,10)).until( ExpectedConditions.presenceOfElementLocated( nameXpath ) );
+        String name                         = nameDynamicElement.getText();
+        
+        By address1Xpath                    = By.xpath( "//*[@id=\"divResults\"]/p/table/tbody/tr[3]/td[2]/b" );
+        WebElement address1DynamicElement   = (new WebDriverWait(driver,10)).until( ExpectedConditions.presenceOfElementLocated( address1Xpath ) );
+        String address1                     = address1DynamicElement.getText();
+        
+        By address2Xpath                    = By.xpath( "//*[@id=\"divResults\"]/p/table/tbody/tr[4]/td[2]/b" );
+        WebElement address2DynamicElement   = (new WebDriverWait(driver,10)).until( ExpectedConditions.presenceOfElementLocated( address2Xpath ) );
+        String address2                     = address2DynamicElement.getText();
+        
+        By cityXpath                        = By.xpath( "//*[@id=\"divResults\"]/p/table/tbody/tr[5]/td[2]/b" );
+        WebElement cityDynamicElement       = (new WebDriverWait(driver,10)).until( ExpectedConditions.presenceOfElementLocated( cityXpath ) );
+        String city                         = cityDynamicElement.getText();
+
+        By stateXpath                       = By.xpath( "//*[@id=\"divResults\"]/p/table/tbody/tr[5]/td[4]/b" );
+        WebElement stateDynamicElement      = (new WebDriverWait(driver,10)).until( ExpectedConditions.presenceOfElementLocated( stateXpath ) );
+        String state                        = stateDynamicElement.getText();
+
+        By zipXpath                         = By.xpath( "//*[@id=\"divResults\"]/p/table/tbody/tr[5]/td[6]/b" );
+        WebElement zipDynamicElement        = (new WebDriverWait(driver,10)).until( ExpectedConditions.presenceOfElementLocated( zipXpath ) );
+        String zip                          = zipDynamicElement.getText();
+
+        
+        Defendant aDefendant                = new Defendant();
+        aDefendant.setName( name );
+        aDefendant.setAddress1( address1 );
+        aDefendant.setAddress2( address2 );
+        aDefendant.setCity( city );
+        aDefendant.setState( state );
+        aDefendant.setZip( zip );
+        
+        this.defendants.add( aDefendant );
+        
+        GarnishSlurper.LOG.info( "Just added aDefendant=" + aDefendant );
+        
+        return true;
+    }
+
+    private void echoSearchFindings()
     {
-        System.out.println( "wait");
+        String attorneySettingsStartDate    = this.newOrleansProperties.getPropertyByKey( "searchStartDateMMDDYYYY" );
+        String attorneySettingsEndDate      = this.newOrleansProperties.getPropertyByKey( "searchEndDateMMDDYYYY" );
+        String keywordFragmentToSearch      = this.newOrleansProperties.getPropertyByKey( "keywordFragmentToSearch" );
+
+        GarnishSlurper.LOG.info( "GarnishSlurper.echoSearchFindings: (From " 
+                                    + attorneySettingsStartDate 
+                                    + " to " 
+                                    + attorneySettingsEndDate 
+                                    + ", keyword=" 
+                                    + keywordFragmentToSearch 
+                                    + ", Found " 
+                                    + this.casesNumbersWithKeywordMatches.size()
+                                    + " Case Numbers: " 
+                                    + this.casesNumbersWithKeywordMatches.toString()
+                                    + 
+                                    ". Getting details for the cases above. Hang on... " );
     }
 
-    
     
     @SuppressWarnings("unused")
     public static void main(String[] args)
