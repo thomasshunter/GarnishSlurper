@@ -20,7 +20,6 @@ import org.springframework.context.annotation.PropertySource;
 public class NewOrleansProperties implements Serializable
 {
     private static Logger LOG                                                   = Logger.getLogger( NewOrleansProperties.class );   
-                                                                                 //http://remoteaccess.orleanscdc.com/fcc-ra//login.asp
     public static final String ORLEANSDC_REMOTE_ACCESS_FIRST_CITY               = "http://remoteaccess.orleanscdc.com/fcc-ra//login.asp";
     public static final String ORLEANSDC_NEW_SEARCH                             = "http://remoteaccess.orleanscdc.com/fcc-ra//search_page.asp";
     public static final String ATTORNEY_SETTINGS_PATH_WIN                       = "C:/";

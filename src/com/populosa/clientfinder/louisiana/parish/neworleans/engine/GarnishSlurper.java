@@ -18,6 +18,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.populosa.clientfinder.louisiana.parish.neworleans.bean.Defendant;
+import com.populosa.clientfinder.louisiana.parish.neworleans.util.ExcelUtil;
 import com.populosa.clientfinder.louisiana.parish.neworleans.util.NewOrleansProperties;
 
 public class GarnishSlurper
@@ -62,6 +63,7 @@ public class GarnishSlurper
     
     private void writeDefendantsToExcel()
     {
+        ExcelUtil util = new ExcelUtil( this.newOrleansProperties, this.defendants );
         
     }
     
@@ -74,7 +76,7 @@ public class GarnishSlurper
             File file       = new File("//Users/tomhunter/DEV/workspaceGarnishSlurper/GarnishSlurper/src/log4j.properties");
             String filePath = file.toURI().toURL().toString();
             
-            //System.setProperty("log4j.configuration", filePath );
+            System.setProperty("log4j.configuration", filePath );
         } 
         catch (MalformedURLException e) 
         {
@@ -184,7 +186,13 @@ public class GarnishSlurper
             for( int currentLinkIndex = 0; currentLinkIndex < highestLinkIndex; currentLinkIndex++ )
             {
                 List<WebElement> links  = driver.findElements(By.tagName("a"));
-                highestLinkIndex        = links.size();                
+                highestLinkIndex        = links.size();  
+                
+                if( currentLinkIndex > highestLinkIndex )
+                {
+                    System.out.println( "wait" );
+                }
+                
                 WebElement anElement    = links.get( currentLinkIndex );
                 String anElementsText   = anElement.getText();                
                 boolean alreadyClicked  = clickedLinks.contains( anElementsText );
@@ -303,7 +311,7 @@ public class GarnishSlurper
                                    }
                                    else if( indexOfDefendantFlag > -1 )
                                    {
-                                       foundDefendant = collectOneDefendant( driver );
+                                       foundDefendant = collectOneDefendant( driver, aCaseNumberToSearch );
                                        
                                        System.out.println( "aCaseNumberToSearch=" + aCaseNumberToSearch + ": foundDefendant=" + foundDefendant );
                                    }
@@ -316,7 +324,7 @@ public class GarnishSlurper
         }        
     }
     
-    private boolean collectOneDefendant( WebDriver driver )
+    private boolean collectOneDefendant( WebDriver driver, String aCaseNumberToSearch )
     {       
         By nameXpath                        = By.xpath( "//*[@id=\"divResults\"]/p/table/tbody/tr[1]/td[2]/b" );
         WebElement nameDynamicElement       = (new WebDriverWait(driver,10)).until( ExpectedConditions.presenceOfElementLocated( nameXpath ) );
@@ -344,6 +352,7 @@ public class GarnishSlurper
 
         
         Defendant aDefendant                = new Defendant();
+        aDefendant.setCaseNumber( aCaseNumberToSearch );
         aDefendant.setName( name );
         aDefendant.setAddress1( address1 );
         aDefendant.setAddress2( address2 );

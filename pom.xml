@@ -22,7 +22,7 @@
     </build>
 
     <dependencies>
-    
+
         <!-- Spring: START -->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -38,7 +38,7 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
             <version>${springframework.version}</version>
-        </dependency>    
+        </dependency>
         <!-- Spring: END -->
 
         <!-- LOGGING: START -->
@@ -47,7 +47,7 @@
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
             <type>jar</type>
-            <!-- <scope>compile</scope>  -->
+            <!-- <scope>compile</scope> -->
         </dependency>
 
         <dependency>
@@ -66,7 +66,7 @@
             <scope>compile</scope>
         </dependency>
         <!-- LOGGING: END -->
-        
+
         <!-- SELENIUM: Java: START -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
@@ -91,6 +91,19 @@
         </dependency>
         <!-- SELENIUM: HTML UNIT DRIVER: END -->
 
+
+
+        <!-- http://mvnrepository.com/artifact/org.apache.poi/poi -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>3.10-FINAL</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>3.10-FINAL</version>
+        </dependency>
     </dependencies>
 
 </project>

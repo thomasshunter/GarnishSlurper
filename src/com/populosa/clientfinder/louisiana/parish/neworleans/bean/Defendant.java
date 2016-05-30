@@ -5,6 +5,8 @@ import java.io.Serializable;
 @SuppressWarnings("serial")
 public class Defendant implements Serializable
 {
+    private String caseNumber;
+    
     private String name;
     private String address1;
     private String address2;
@@ -19,6 +21,8 @@ public class Defendant implements Serializable
         
         out.append( "\n------------------" );
         out.append( "\n     Defendant    " );
+        out.append( "\n------------------" );
+        out.append( "\n caseNumber      =" + this.caseNumber );
         out.append( "\n------------------" );
         out.append( "\n name            =" + this.name );
         out.append( "\n address1        =" + this.address1 );
@@ -89,5 +93,15 @@ public class Defendant implements Serializable
     public void setZip(String zip)
     {
         this.zip = zip;
+    }
+
+    public String getCaseNumber()
+    {
+        return caseNumber;
+    }
+
+    public void setCaseNumber(String caseNumber)
+    {
+        this.caseNumber = caseNumber;
     }
 }
