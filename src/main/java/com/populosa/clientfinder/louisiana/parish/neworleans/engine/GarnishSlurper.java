@@ -17,6 +17,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.populosa.clientfinder.louisiana.parish.neworleans.address.AddressSuss;
 import com.populosa.clientfinder.louisiana.parish.neworleans.bean.Defendant;
 import com.populosa.clientfinder.louisiana.parish.neworleans.util.ExcelUtil;
 import com.populosa.clientfinder.louisiana.parish.neworleans.util.NewOrleansProperties;
@@ -24,8 +25,7 @@ import com.populosa.clientfinder.louisiana.parish.neworleans.util.NewOrleansProp
 public class GarnishSlurper
 {    
     private static Logger LOG           = Logger.getLogger( GarnishSlurper.class );
-    
-    
+        
     private NewOrleansProperties newOrleansProperties;
     private List<String> casesNumbersWithKeywordMatches;
     private List<Defendant> defendants  = new ArrayList<Defendant>();
@@ -53,6 +53,8 @@ public class GarnishSlurper
         echoSearchFindings();
 
         pullCaseLitigants( driver );
+        
+        sussOutMissingAddressesUsingTheWeb( driver );
           
         writeDefendantsToExcel();
         
@@ -67,6 +69,26 @@ public class GarnishSlurper
         
     }
     
+    
+    private void sussOutMissingAddressesUsingTheWeb( WebDriver driver )
+    {
+        if( this.defendants == null || this.defendants.size() == 0 )
+        {
+            GarnishSlurper.LOG.info( "GarnishSlurper.sussOutMissingAddressesUsingTheWeb() is bailing. No Defendants found. Dratski." );
+            
+            return;
+        }
+        
+        AddressSuss suss                = new AddressSuss();
+        Iterator<Defendant> defendants  = this.defendants.iterator();
+        
+        while( defendants.hasNext() )
+        {
+            Defendant defendantWithIncompleteAddress = defendants.next();
+            
+            suss.findDefendantAddress( defendantWithIncompleteAddress );
+        }
+    }
     
     
     private static void setupLog4J()
