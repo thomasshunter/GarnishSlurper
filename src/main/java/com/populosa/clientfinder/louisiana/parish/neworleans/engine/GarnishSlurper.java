@@ -53,20 +53,20 @@ public class GarnishSlurper
         echoSearchFindings();
 
         pullCaseLitigants( driver );
+                
+        //Close the browser
+        driver.quit();        
         
         sussOutMissingAddressesUsingTheWeb( driver );
           
         writeDefendantsToExcel();
-        
-        //Close the browser
-        driver.quit();        
     }
     
     
+    @SuppressWarnings("unused")
     private void writeDefendantsToExcel()
     {
         ExcelUtil util = new ExcelUtil( this.newOrleansProperties, this.defendants );
-        
     }
     
     

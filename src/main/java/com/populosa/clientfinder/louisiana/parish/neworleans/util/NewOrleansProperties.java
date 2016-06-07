@@ -87,11 +87,10 @@ public class NewOrleansProperties implements Serializable
         return value;
     }
     
+    @SuppressWarnings("unused")
     public static void main( String[] args )
     {
         NewOrleansProperties props = new NewOrleansProperties();
-        
-        
     }
 
     public Properties getProperties()

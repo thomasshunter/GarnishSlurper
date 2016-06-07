@@ -1,8 +1,11 @@
 package com.populosa.clientfinder.louisiana.parish.neworleans.address;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
@@ -25,10 +28,11 @@ public class AddressSuss
     
     public void findDefendantAddress( Defendant defendantWithIncompleteAddress )
     {
-        String wholeName    = defendantWithIncompleteAddress.getName();
-        String address1     = defendantWithIncompleteAddress.getAddress1();
-        String city         = defendantWithIncompleteAddress.getCity();
-        String state        = defendantWithIncompleteAddress.getState();
+        String wholeName                = defendantWithIncompleteAddress.getName();
+        String address1                 = defendantWithIncompleteAddress.getAddress1();
+        String city                     = defendantWithIncompleteAddress.getCity();
+        String state                    = (defendantWithIncompleteAddress.getState().trim().length() > 1) ? defendantWithIncompleteAddress.getState().trim() : "LA"; 
+        Aliases thisDefendantsAliases   = new Aliases( wholeName );
         
         if( wholeName == null )
         {
@@ -51,70 +55,81 @@ public class AddressSuss
             return;
         }
         
-        String[] firstAndLast = findFirstAndLastNames( wholeName );
+        String[] aliases        = thisDefendantsAliases.getAliases();
+        ChromeDriver driver     = null;
         
-        try
+        for( int i = 0; i < aliases.length; i++ )
         {
-            System.setProperty( "webdriver.chrome.driver", "/Users/tomhunter/DEV/workspaceGarnishSlurper/chromedriver" );
-            
-            WebDriver driver                    = new ChromeDriver();
-            driver.navigate().to( AddressSuss.ADDRESS_SEARCH_URL_ANYWHO );
-            
-            WebElement firstNameElement         = driver.findElement( By.id( AddressSuss.ADDRESS_ANYWHO_BYNAME_FIRST_ID ) );
-            WebElement lastNameElement          = driver.findElement( By.id( AddressSuss.ADDRESS_ANYWHO_BYNAME_LAST_ID ) );
-            WebElement cityElement              = driver.findElement( By.id( AddressSuss.ADDRESS_ANYWHO_BYNAME_CITY_ID ) );
-            WebElement stateElement             = driver.findElement( By.id( AddressSuss.ADDRESS_ANYWHO_BYNAME_STATE_ID ) );
-            WebElement nameSubmitElement        = driver.findElement( By.id( AddressSuss.ADDRESS_ANYWHO_BYNAME_SUBMIT_ID ) );
-            
-            firstNameElement.sendKeys( firstAndLast[ 0 ] );
-            lastNameElement.sendKeys( firstAndLast[ 1 ] );
-            cityElement.sendKeys( city );
-            stateElement.sendKeys( state );
-            
-            nameSubmitElement.click();
+            String[] firstAndLast = thisDefendantsAliases.breakIntoFirstAndLast( i );     
 
-            System.out.println( "wait" );
-        }
-        catch( Exception e )
-        {
-            AddressSuss.LOG.error( "AddressSuss.findDefendantAddress() threw an Exception, e=" + e );
-        }
-    }
-    
-    private String[] findFirstAndLastNames( String wholeName )
-    {
-        String[] names = wholeName.split( " " );
-        
-        if( names.length == 1 || names.length == 2 )
-        {
-            return names;
-        }
-        else if( names.length > 2 )
-        {
-            return names;
-        }
-        else if( names.length == 3 )
-        {
-            String middle = names[ 1 ];
-            
-            if( 
-                    middle != null 
-                    && 
-                    (
-                            middle.trim().equalsIgnoreCase( "von" )
-                            ||
-                            middle.trim().equalsIgnoreCase( "der" )
-                    )
-              )
+            try
             {
-                String last = middle + " " + names[ 2 ];
-                names[ 2 ]  = last;
+                System.setProperty( "webdriver.chrome.driver", "/Users/tomhunter/DEV/workspaceGarnishSlurper/chromedriver" );
+                
+                driver                              = new ChromeDriver();
+                driver.navigate().to( AddressSuss.ADDRESS_SEARCH_URL_ANYWHO );
+                
+                WebElement firstNameElement         = driver.findElement( By.id( AddressSuss.ADDRESS_ANYWHO_BYNAME_FIRST_ID ) );
+                WebElement lastNameElement          = driver.findElement( By.id( AddressSuss.ADDRESS_ANYWHO_BYNAME_LAST_ID ) );
+                WebElement cityElement              = driver.findElement( By.id( AddressSuss.ADDRESS_ANYWHO_BYNAME_CITY_ID ) );
+                WebElement stateElement             = driver.findElement( By.id( AddressSuss.ADDRESS_ANYWHO_BYNAME_STATE_ID ) );
+                WebElement nameSubmitElement        = driver.findElement( By.id( AddressSuss.ADDRESS_ANYWHO_BYNAME_SUBMIT_ID ) );
+                
+                firstNameElement.sendKeys( firstAndLast[ 0 ] );
+                lastNameElement.sendKeys( firstAndLast[ 1 ] );
+                cityElement.sendKeys( city );
+                stateElement.sendKeys( state );
+                
+                nameSubmitElement.click();
+                
+                try
+                {
+                    List<WebElement> allFullnameElements        = driver.findElements( By.className( "fullname" ) );
+                    Iterator<WebElement> allFullnameElementsIt  = allFullnameElements.iterator();
+                    
+                    List<WebElement> allAddressElements         = driver.findElements( By.className( "address" ) );
+                    Iterator<WebElement> allAddressElementsIt   = allAddressElements.iterator();
+                    
+                    boolean foundSomethingWorthyOfScreenCapping = false;
+                    
+                    while( allAddressElementsIt.hasNext() )
+                    {
+                        WebElement fullnameElement      = allFullnameElementsIt.next();
+                        String fullnameFromWebSearch    = fullnameElement.getText();
+                        
+                        WebElement addressElement       = allAddressElementsIt.next();
+                        String addressFromWebSearch     = addressElement.getText();
+                       
+                        defendantWithIncompleteAddress.addNameAddressFromWebSearch( fullnameFromWebSearch + " ==> " + addressFromWebSearch );
+                        System.out.println( "For firstAndLast=" + java.util.Arrays.toString( firstAndLast ) + ", found fullnameElement, addressFromWebSearch=" + fullnameElement + ", " + addressFromWebSearch );
+                        foundSomethingWorthyOfScreenCapping = true;
+                    }
+
+                    if( foundSomethingWorthyOfScreenCapping )
+                    {
+                        byte[] screepcap                    = driver.getScreenshotAs( OutputType.BYTES );
+                        defendantWithIncompleteAddress.setScreepcap( screepcap );                        
+                    }
+                }
+                catch( Exception e )
+                {
+                    AddressSuss.LOG.info( "addressElement threw an Exception e=" + e );
+                }
             }
-            
-            System.out.println( "middle=" + middle );
-        }
-        
-        return names;
+            catch( Exception ee )
+            {
+                AddressSuss.LOG.error( "AddressSuss.findDefendantAddress() threw an Exception, ee=" + ee );
+            }
+            finally
+            {
+                if( driver != null )
+                {
+                    //Close the browser
+                    driver.quit();   
+                }
+            }            
+        } // end 'for'
     }
     
+
 }
