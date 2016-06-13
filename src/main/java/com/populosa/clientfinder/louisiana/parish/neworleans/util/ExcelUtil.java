@@ -228,7 +228,7 @@ public class ExcelUtil
         byte[] screencap            = aDefendant.getScreepcap();
         if( screencap != null )
         {
-            addScreencapToRow( rowIndex, screencap, aCell8 );
+            //addScreencapToRow( rowIndex, screencap, aCell8 );
         }
         
         XSSFCell aCell9             = aRow.createCell( (short)9 );

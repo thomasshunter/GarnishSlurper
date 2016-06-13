@@ -235,7 +235,17 @@ public class GarnishSlurper
                         continue;
                     }
                 
-                    String pageSource                   = driver.switchTo().frame( "modify_case_events_detail" ).getPageSource();
+                    String pageSource                   = null;
+                    
+                    try
+                    {
+                        pageSource = driver.switchTo().frame( "modify_case_events_detail" ).getPageSource();
+                    }
+                    catch( Exception e )
+                    {
+                        GarnishSlurper.LOG.error( "\n\nGarnishSlurper.searchOnePageOfResults() failed to find 'modify_case_events_detail', e=" + e ); 
+                    }
+                    
                     pageSource                          = pageSource.toLowerCase();                
                     int indexOfKeywordFragmentOnPage    = pageSource.indexOf( keywordFragmentToSearch.toLowerCase() );
                 
