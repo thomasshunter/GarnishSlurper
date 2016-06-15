@@ -42,7 +42,9 @@ public class GarnishSlurper
         // Create a new instance of the Firefox driver
         // Notice that the remainder of the code relies on the interface, 
         // not the implementation.
-        System.setProperty( "webdriver.chrome.driver", "/Users/tomhunter/DEV/workspaceGarnishSlurper/chromedriver" );
+        String homeDir                      = System.getProperty("user.home");
+        
+        System.setProperty( "webdriver.chrome.driver", homeDir + "/DEV/workspaceGarnishSlurper/chromedriver" );
         
         WebDriver driver                    = new ChromeDriver();
 

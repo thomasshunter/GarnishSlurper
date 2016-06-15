@@ -32,7 +32,6 @@ public class ExcelUtil
     private NewOrleansProperties newOrleansProperties;
     
     public static final String ATTORNEY_SETTINGS_PATH_WIN       = "C:/";
-    public static final String ATTORNEY_SETTINGS_PATH_MAC       = "/Users/tomhunter/";
     
     private XSSFWorkbook wb;    
     private XSSFSheet sheet;
@@ -288,7 +287,8 @@ public class ExcelUtil
         
         if( isMacOs() )
         {
-            filePath = ExcelUtil.ATTORNEY_SETTINGS_PATH_MAC + "DEV/attorney_settings/KeywordSlurper_" + date.trim() + ".xlsx ";
+            String homeDir  = System.getProperty("user.home");
+            filePath        = homeDir + "/DEV/attorney_settings/KeywordSlurper_" + date.trim() + ".xlsx ";
         }
         else
         {
